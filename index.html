@@ -36,6 +36,7 @@
             margin: 20px;
             transition: transform 0.1s ease;
             outline: none;
+            touch-action: manipulation;
         }
 
         .click-button:hover {
@@ -92,10 +93,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            gap: 10px; /* Добавляем отступы между кнопками */
         }
 
         .button {
-            width: 100%;
+            flex: 1;
             height: 100%;
             background-color: #555;
             border: none;
@@ -109,7 +111,6 @@
         }
 
         .shop-button {
-            width: 60%;
             height: 30px;
             background: url('https://i.ibb.co/KLZJWHT/Group-67-1.png') no-repeat center center;
         }
@@ -121,7 +122,6 @@
         }
 
         .task-button {
-            width: 60%;
             height: 30px;
             background: url('https://i.ibb.co/m49RLVz/Group-70-2.png') no-repeat center center;
         }
@@ -217,11 +217,10 @@
         }
 
         .click-button {
-            -webkit-tap-highlight-color: transparent; /* Для браузеров на базе WebKit (Chrome, Safari) */
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* Дополнительно для WebKit, чтобы подавить синий цвет фона */
-            -moz-tap-highlight-color: transparent; /* Для Firefox */
-            -ms-touch-action: manipulation; /* Для Internet Explorer */
-            touch-action: manipulation; /* Современные браузеры */
+            -webkit-tap-highlight-color: transparent;
+            -moz-tap-highlight-color: transparent;
+            -ms-touch-action: manipulation;
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -240,6 +239,11 @@
         <button class="button shop-button" id="shopButton"></button>
         <button class="button referral-button" id="referralButton"></button>
         <button class="button task-button" id="taskButton"></button>
+    </div>
+    <div class="leagues">
+        <h2>Leagues</h2>
+         <h5>Coming Soon</h5>
+        
     </div>
 </div>
 
@@ -267,17 +271,19 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
 <script>
     // Firebase configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyC5F-PTgnHgFXHGp7cl8OXIEZZMDqvdh7c",
-        authDomain: "game-clicker.firebaseapp.com",
-        projectId: "game-clicker",
-        storageBucket: "game-clicker.appspot.com",
-        messagingSenderId: "1234567890",
-        appId: "1:1234567890:web:abcdef123456"
+        apiKey: "AIzaSyBSn1RXV_rjf9_0ld0GBpETDQEB9rnQA3Y",
+        authDomain: "royal-coin-6d818.firebaseapp.com",
+        projectId: "royal-coin-6d818",
+        storageBucket: "royal-coin-6d818.appspot.com",
+        messagingSenderId: "163721073000",
+        appId: "1:163721073000:web:f325ab5becb1e79d19c6dd",
+        measurementId: "G-2JC6WM2TZS"
     };
 
     // Initialize Firebase
@@ -285,155 +291,252 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    let userDocRef = null;
-    let userData = {
-        coins: 0,
-        energy: 100,
-        maxEnergy: 100,
-        energyRegen: 1,
-        clickPower: 1
-    };
+    // Game variables
+    let coinCount = 0;
+    let clickPower = 1;
+    let energy = 100;
+    let maxEnergy = 100;
+    let energyRegen = 1;
 
-    // On Auth State Changed
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            userDocRef = db.collection('users').doc(user.uid);
-            const doc = await userDocRef.get();
-            if (doc.exists) {
-                userData = doc.data();
-                updateUI();
-            } else {
-                await userDocRef.set(userData);
-            }
-        }
-    });
-
-    // Sign in Anonymously
-    auth.signInAnonymously().catch((error) => {
-        console.error('Error signing in anonymously:', error);
-    });
-
-    const coinCountEl = document.getElementById('coinCount');
-    const energyFillEl = document.getElementById('energyFill');
+    // DOM elements
     const clickButton = document.getElementById('clickButton');
-
+    const coinCountElement = document.getElementById('coinCount');
+    const energyFill = document.getElementById('energyFill');
     const shopButton = document.getElementById('shopButton');
+    const shop = document.getElementById('shop');
+    const closeShop = document.getElementById('closeShop');
     const referralButton = document.getElementById('referralButton');
+    const referral = document.getElementById('referral');
+    const closeReferral = document.getElementById('closeReferral');
     const taskButton = document.getElementById('taskButton');
+    const task = document.getElementById('task');
+    const closeTask = document.getElementById('closeTask');
+    const boostClickPower = document.getElementById('boostClickPower');
+    const boostEnergyRegen = document.getElementById('boostEnergyRegen');
+    const boostMaxEnergy = document.getElementById('boostMaxEnergy');
+    const boostClickPowerPriceElement = document.getElementById('boostClickPowerPrice');
+    const boostEnergyRegenPriceElement = document.getElementById('boostEnergyRegenPrice');
+    const boostMaxEnergyPriceElement = document.getElementById('boostMaxEnergyPrice');
+    const referralCodeElement = document.getElementById('referralCode');
+    const enterReferralCodeElement = document.getElementById('enterReferralCode');
+    const enterCodeButton = document.getElementById('enterCodeButton');
+    const leaguesList = document.getElementById('leaguesList');
 
-    const shopEl = document.getElementById('shop');
-    const closeShopEl = document.getElementById('closeShop');
-    const referralEl = document.getElementById('referral');
-    const closeReferralEl = document.getElementById('closeReferral');
-    const taskEl = document.getElementById('task');
-    const closeTaskEl = document.getElementById('closeTask');
+    // Shop prices
+    let boostClickPowerPrice = 100;
+    let boostEnergyRegenPrice = 150;
+    let boostMaxEnergyPrice = 175;
 
-    // Update UI
-    function updateUI() {
-        coinCountEl.textContent = userData.coins;
-        const energyPercentage = (userData.energy / userData.maxEnergy) * 100;
-        energyFillEl.style.width = `${energyPercentage}%`;
+    // Save game state to localStorage
+    function saveGameState() {
+        const gameState = {
+            coinCount,
+            clickPower,
+            energy,
+            maxEnergy,
+            energyRegen,
+            boostClickPowerPrice,
+            boostEnergyRegenPrice,
+            boostMaxEnergyPrice,
+        };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
     }
 
-    // Click Button Event
+    // Load game state from localStorage
+    function loadGameState() {
+        const savedState = JSON.parse(localStorage.getItem('gameState'));
+        if (savedState) {
+            coinCount = savedState.coinCount;
+            clickPower = savedState.clickPower;
+            energy = savedState.energy;
+            maxEnergy = savedState.maxEnergy;
+            energyRegen = savedState.energyRegen;
+            boostClickPowerPrice = savedState.boostClickPowerPrice;
+            boostEnergyRegenPrice = savedState.boostEnergyRegenPrice;
+            boostMaxEnergyPrice = savedState.boostMaxEnergyPrice;
+
+            coinCountElement.textContent = coinCount;
+            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
+            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
+            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
+            updateEnergyBar();
+        }
+    }
+
+    // Generate referral code
+    function generateReferralCode() {
+        let code = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        for (let i = 0; i < 8; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return code;
+    }
+
+    // Display referral code
+    function displayReferralCode() {
+        const code = generateReferralCode();
+        referralCodeElement.value = code;
+    }
+
+    // Handle click
     clickButton.addEventListener('click', () => {
-        if (userData.energy > 0) {
-            userData.coins += userData.clickPower;
-            userData.energy -= 1;
-            updateUI();
-            saveUserData();
-
-            // Add Coin Fly Effect
-            const coinFly = document.createElement('div');
-            coinFly.className = 'coin-fly';
-            coinFly.textContent = `+${userData.clickPower}`;
-            document.body.appendChild(coinFly);
-            const rect = clickButton.getBoundingClientRect();
-            coinFly.style.left = `${rect.left + rect.width / 2}px`;
-            coinFly.style.top = `${rect.top}px`;
-            setTimeout(() => {
-                coinFly.remove();
-            }, 1000);
-
-            // Vibrate on Click
-            if (navigator.vibrate) {
-                navigator.vibrate(50); // Вибрация 50 мс
-            }
+        if (energy > 0) {
+            coinCount += clickPower;
+            energy -= 1;
+            coinCountElement.textContent = coinCount;
+            updateEnergyBar();
+            showCoinFly('+1');
+            saveGameState(); // Save game state on click
         }
     });
 
-    // Save User Data to Firestore
-    async function saveUserData() {
-        if (userDocRef) {
-            await userDocRef.set(userData);
-        }
+    // Update energy bar
+    function updateEnergyBar() {
+        const energyPercentage = (energy / maxEnergy) * 100;
+        energyFill.style.width = energyPercentage + '%';
     }
 
-    // Open and Close Modals
-    shopButton.addEventListener('click', () => {
-        shopEl.style.display = 'block';
-    });
-    closeShopEl.addEventListener('click', () => {
-        shopEl.style.display = 'none';
-    });
+    // Show coin fly effect
+    function showCoinFly(text) {
+        const coinFly = document.createElement('div');
+        coinFly.className = 'coin-fly';
+        coinFly.textContent = text;
+        document.body.appendChild(coinFly);
 
-    referralButton.addEventListener('click', () => {
-        referralEl.style.display = 'block';
-    });
-    closeReferralEl.addEventListener('click', () => {
-        referralEl.style.display = 'none';
-    });
+        const rect = clickButton.getBoundingClientRect();
+        coinFly.style.left = rect.left + rect.width / 2 + 'px';
+        coinFly.style.top = rect.top + rect.height / 2 + 'px';
 
-    taskButton.addEventListener('click', () => {
-        taskEl.style.display = 'block';
-    });
-    closeTaskEl.addEventListener('click', () => {
-        taskEl.style.display = 'none';
-    });
+        setTimeout(() => {
+            coinFly.remove();
+        }, 1000);
+    }
 
-    // Shop Item Events
-    document.getElementById('boostClickPower').addEventListener('click', () => {
-        const cost = 100;
-        if (userData.coins >= cost) {
-            userData.coins -= cost;
-            userData.clickPower += 1;
-            updateUI();
-            saveUserData();
-        }
-    });
-
-    document.getElementById('boostEnergyRegen').addEventListener('click', () => {
-        const cost = 150;
-        if (userData.coins >= cost) {
-            userData.coins -= cost;
-            userData.energyRegen += 1;
-            updateUI();
-            saveUserData();
-        }
-    });
-
-    document.getElementById('boostMaxEnergy').addEventListener('click', () => {
-        const cost = 175;
-        if (userData.coins >= cost) {
-            userData.coins -= cost;
-            userData.maxEnergy += 10;
-            userData.energy += 10;
-            updateUI();
-            saveUserData();
-        }
-    });
-
-    // Energy Regen
+    // Energy regeneration
     setInterval(() => {
-        if (userData.energy < userData.maxEnergy) {
-            userData.energy += userData.energyRegen;
-            if (userData.energy > userData.maxEnergy) {
-                userData.energy = userData.maxEnergy;
+        if (energy < maxEnergy) {
+            energy += energyRegen;
+            if (energy > maxEnergy) {
+                energy = maxEnergy;
             }
-            updateUI();
-            saveUserData();
+            updateEnergyBar();
         }
     }, 1000);
+
+    // Show and hide shop
+    shopButton.addEventListener('click', () => {
+        shop.style.display = 'block';
+    });
+
+    closeShop.addEventListener('click', () => {
+        shop.style.display = 'none';
+    });
+
+    // Show and hide referral
+    referralButton.addEventListener('click', () => {
+        referral.style.display = 'block';
+    });
+
+    closeReferral.addEventListener('click', () => {
+        referral.style.display = 'none';
+    });
+
+    // Show and hide task
+    taskButton.addEventListener('click', () => {
+        task.style.display = 'block';
+    });
+
+    closeTask.addEventListener('click', () => {
+        task.style.display = 'none';
+    });
+
+    // Handle shop purchases
+    boostClickPower.addEventListener('click', () => {
+        if (coinCount >= boostClickPowerPrice) {
+            coinCount -= boostClickPowerPrice;
+            clickPower += 1;
+            coinCountElement.textContent = coinCount;
+            boostClickPowerPrice += 50;
+            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    boostEnergyRegen.addEventListener('click', () => {
+        if (coinCount >= boostEnergyRegenPrice) {
+            coinCount -= boostEnergyRegenPrice;
+            energyRegen += 1;
+            coinCountElement.textContent = coinCount;
+            boostEnergyRegenPrice += 75;
+            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    boostMaxEnergy.addEventListener('click', () => {
+        if (coinCount >= boostMaxEnergyPrice) {
+            coinCount -= boostMaxEnergyPrice;
+            maxEnergy += 50;
+            coinCountElement.textContent = coinCount;
+            boostMaxEnergyPrice += 100;
+            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
+            updateEnergyBar();
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    // Handle referral code submission
+    enterCodeButton.addEventListener('click', () => {
+        const enteredCode = enterReferralCodeElement.value.trim();
+        if (enteredCode !== '' && enteredCode !== referralCodeElement.value) {
+            // Add bonus coins for using a referral code
+            coinCount += 100;
+            coinCountElement.textContent = coinCount;
+            enterReferralCodeElement.value = '';
+            alert('Referral code accepted! You have earned 100 coins.');
+            saveGameState(); // Save game state on referral code submission
+        } else {
+            alert('Invalid referral code.');
+        }
+    });
+
+    // Display leagues
+    function displayLeagues() {
+        const leagues = [
+            { name: 'Bronze', price: 100 },
+            { name: 'Silver', price: 500 },
+            { name: 'Gold', price: 1000 }
+        ];
+
+        leaguesList.innerHTML = '';
+        leagues.forEach(league => {
+            const leagueItem = document.createElement('div');
+            leagueItem.className = 'league-item';
+            leagueItem.textContent = `${league.name} League (Cost: ${league.price} coins)`;
+            leaguesList.appendChild(leagueItem);
+
+            leagueItem.addEventListener('click', () => {
+                if (coinCount >= league.price) {
+                    coinCount -= league.price;
+                    coinCountElement.textContent = coinCount;
+                    alert(`You have joined the ${league.name} League!`);
+                    saveGameState(); // Save game state on joining a league
+                } else {
+                    alert(`Not enough coins to join the ${league.name} League.`);
+                }
+            });
+        });
+    }
+
+    // Initialize game
+    function initializeGame() {
+        loadGameState(); // Load game state on initialization
+        displayReferralCode();
+        displayLeagues();
+    }
+
+    initializeGame();
 </script>
 </body>
 </html>
