@@ -240,6 +240,11 @@
         <button class="button referral-button" id="referralButton"></button>
         <button class="button task-button" id="taskButton"></button>
     </div>
+    <div class="leagues">
+        <h2>Leagues</h2>
+         <h5>Coming Soon</h5>
+        
+    </div>
 </div>
 
 <div class="shop" id="shop">
@@ -279,8 +284,9 @@
         authDomain: "royal-coin-6d818.firebaseapp.com",
         projectId: "royal-coin-6d818",
         storageBucket: "royal-coin-6d818.appspot.com",
-        messagingSenderId: "356647777585",
-        appId: "1:356647777585:web:c79eabeb0f0208e7d5a59c"
+        messagingSenderId: "163721073000",
+        appId: "1:163721073000:web:f325ab5becb1e79d19c6dd",
+        measurementId: "G-2JC6WM2TZS"
     };
 
     // Initialize Firebase
@@ -288,12 +294,12 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
+    // Game variables
     let coinCount = 0;
     let clickPower = 1;
     let energy = 100;
     let maxEnergy = 100;
-    let energyRegenRate = 1;
-    let energyRegenInterval = null;
+    let energyRegen = 1;
 
     // DOM elements
     const clickButton = document.getElementById('clickButton');
@@ -547,206 +553,7 @@ document.addEventListener('touchmove', (event) => {
         displayLeagues();
     }
 
-    
-   // Save game state to localStorage
-    function saveGameState() {
-        const gameState = {
-            coinCount,
-            clickPower,
-            energy,
-            maxEnergy,
-            energyRegen,
-            boostClickPowerPrice,
-            boostEnergyRegenPrice,
-            boostMaxEnergyPrice,
-        };
-        localStorage.setItem('gameState', JSON.stringify(gameState));
-    }
-
-    // Load game state from localStorage
-    function loadGameState() {
-        const savedState = JSON.parse(localStorage.getItem('gameState'));
-        if (savedState) {
-            coinCount = savedState.coinCount;
-            clickPower = savedState.clickPower;
-            energy = savedState.energy;
-            maxEnergy = savedState.maxEnergy;
-            energyRegen = savedState.energyRegen;
-            boostClickPowerPrice = savedState.boostClickPowerPrice;
-            boostEnergyRegenPrice = savedState.boostEnergyRegenPrice;
-            boostMaxEnergyPrice = savedState.boostMaxEnergyPrice;
-
-            coinCountElement.textContent = coinCount;
-            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
-            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
-            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
-            updateEnergyBar();
-        }
-    }
-
-    // Click button functionality
-    clickButton.addEventListener('click', () => {
-        coinCount += clickPower;
-        coinCountDisplay.textContent = coinCount;
-    });
-
-    // Energy regeneration
-    function regenerateEnergy() {
-        if (energy < maxEnergy) {
-            energy += energyRegenRate;
-            if (energy > maxEnergy) {
-                energy = maxEnergy;
-            }
-            updateEnergyBar();
-        }
-    }
- // Show coin fly effect
-    function showCoinFly(text) {
-        const coinFly = document.createElement('div');
-        coinFly.className = 'coin-fly';
-        coinFly.textContent = text;
-        document.body.appendChild(coinFly);
-
-        const rect = clickButton.getBoundingClientRect();
-        coinFly.style.left = rect.left + rect.width / 2 + 'px';
-        coinFly.style.top = rect.top + rect.height / 2 + 'px';
-
-        setTimeout(() => {
-            coinFly.remove();
-        }, 1000);
-    }
-
-    function updateEnergyBar() {
-        energyFill.style.width = (energy / maxEnergy) * 100 + '%';
-    }
-
-    function startEnergyRegeneration() {
-        energyRegenInterval = setInterval(regenerateEnergy, 1000);
-    }
-
-    // Shop functionality
-    shopButton.addEventListener('click', () => {
-        shop.style.display = 'block';
-    });
-
-    function closeShop() {
-        shop.style.display = 'none';
-    }
-
-    document.getElementById('closeShop').addEventListener('click', closeShop);
-
-    document.getElementById('boostClickPower').addEventListener('click', () => {
-        if (coinCount >= 100) {
-            clickPower += 1;
-            coinCount -= 100;
-            boostClickPowerPriceDisplay.textContent = 100 + clickPower * 10;
-            coinCountDisplay.textContent = coinCount;
-        }
-    });
-
-    document.getElementById('boostEnergyRegen').addEventListener('click', () => {
-        if (coinCount >= 150) {
-            energyRegenRate += 1;
-            coinCount -= 150;
-            boostEnergyRegenPriceDisplay.textContent = 150 + energyRegenRate * 15;
-            coinCountDisplay.textContent = coinCount;
-        }
-    });
-
-    document.getElementById('boostMaxEnergy').addEventListener('click', () => {
-        if (coinCount >= 175) {
-            maxEnergy += 10;
-            energy = maxEnergy;
-            coinCount -= 175;
-            boostMaxEnergyPriceDisplay.textContent = 175 + maxEnergy * 5;
-            coinCountDisplay.textContent = coinCount;
-            updateEnergyBar();
-        }
-    });
-
-    // Referral functionality
-    referralButton.addEventListener('click', () => {
-        referral.style.display = 'block';
-        generateReferralCode();
-    });
-
-    function closeReferral() {
-        referral.style.display = 'none';
-    }
-
-    document.getElementById('closeReferral').addEventListener('click', closeReferral);
-
-    function generateReferralCode() {
-        referralCodeInput.value = makeid(6);
-    }
-
-    function makeid(length) {
-        let result = '';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-    }
-
-    enterCodeButton.addEventListener('click', () => {
-        const referralCode = enterReferralCodeInput.value.trim();
-        if (referralCode !== '') {
-            checkReferralCode(referralCode);
-        }
-    });
-
-    function checkReferralCode(referralCode) {
-        // Query to check if referral code exists in Firestore
-        const referralRef = db.collection('referrals').doc(referralCode);
-
-        referralRef.get().then((doc) => {
-            if (doc.exists) {
-                applyReferralBonus(referralCode);
-            } else {
-                alert('Invalid referral code!');
-            }
-        }).catch((error) => {
-            console.error('Error checking referral code:', error);
-        });
-    }
-
-    function applyReferralBonus(referralCode) {
-        // Update user's coins in Firestore and add a transaction record
-        const userRef = db.collection('users').doc(auth.currentUser.uid);
-
-        db.runTransaction((transaction) => {
-            return transaction.get(userRef).then((userDoc) => {
-                if (userDoc.exists) {
-                    let newCoins = userDoc.data().coins + 10000;
-                    transaction.update(userRef, { coins: newCoins });
-                    transaction.delete(referralCode);
-                    alert('Referral bonus applied successfully!');
-                } else {
-                    alert('User document not found!');
-                }
-            });
-        }).catch((error) => {
-            console.error('Error applying referral bonus:', error);
-        });
-    }
-
-    // Task functionality
-    taskButton.addEventListener('click', () => {
-        task.style.display = 'block';
-    });
-
-    function closeTask() {
-        task.style.display = 'none';
-    }
-
-    document.getElementById('closeTask').addEventListener('click', closeTask);
-
-    // Initialize
-    startEnergyRegeneration();
     initializeGame();
 </script>
-
 </body>
 </html>
