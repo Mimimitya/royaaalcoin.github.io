@@ -295,21 +295,259 @@
     let energyRegenRate = 1;
     let energyRegenInterval = null;
 
+    // DOM elements
     const clickButton = document.getElementById('clickButton');
-    const coinCountDisplay = document.getElementById('coinCount');
+    const coinCountElement = document.getElementById('coinCount');
     const energyFill = document.getElementById('energyFill');
     const shopButton = document.getElementById('shopButton');
-    const referralButton = document.getElementById('referralButton');
-    const taskButton = document.getElementById('taskButton');
-    const boostClickPowerPriceDisplay = document.getElementById('boostClickPowerPrice');
-    const boostEnergyRegenPriceDisplay = document.getElementById('boostEnergyRegenPrice');
-    const boostMaxEnergyPriceDisplay = document.getElementById('boostMaxEnergyPrice');
     const shop = document.getElementById('shop');
+    const closeShop = document.getElementById('closeShop');
+    const referralButton = document.getElementById('referralButton');
     const referral = document.getElementById('referral');
+    const closeReferral = document.getElementById('closeReferral');
+    const taskButton = document.getElementById('taskButton');
     const task = document.getElementById('task');
-    const referralCodeInput = document.getElementById('referralCode');
-    const enterReferralCodeInput = document.getElementById('enterReferralCode');
+    const closeTask = document.getElementById('closeTask');
+    const boostClickPower = document.getElementById('boostClickPower');
+    const boostEnergyRegen = document.getElementById('boostEnergyRegen');
+    const boostMaxEnergy = document.getElementById('boostMaxEnergy');
+    const boostClickPowerPriceElement = document.getElementById('boostClickPowerPrice');
+    const boostEnergyRegenPriceElement = document.getElementById('boostEnergyRegenPrice');
+    const boostMaxEnergyPriceElement = document.getElementById('boostMaxEnergyPrice');
+    const referralCodeElement = document.getElementById('referralCode');
+    const enterReferralCodeElement = document.getElementById('enterReferralCode');
     const enterCodeButton = document.getElementById('enterCodeButton');
+    const leaguesList = document.getElementById('leaguesList');
+
+    // Shop prices
+    let boostClickPowerPrice = 100;
+    let boostEnergyRegenPrice = 150;
+    let boostMaxEnergyPrice = 175;
+
+    // Save game state to localStorage
+    function saveGameState() {
+        const gameState = {
+            coinCount,
+            clickPower,
+            energy,
+            maxEnergy,
+            energyRegen,
+            boostClickPowerPrice,
+            boostEnergyRegenPrice,
+            boostMaxEnergyPrice,
+        };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    }
+
+    // Load game state from localStorage
+    function loadGameState() {
+        const savedState = JSON.parse(localStorage.getItem('gameState'));
+        if (savedState) {
+            coinCount = savedState.coinCount;
+            clickPower = savedState.clickPower;
+            energy = savedState.energy;
+            maxEnergy = savedState.maxEnergy;
+            energyRegen = savedState.energyRegen;
+            boostClickPowerPrice = savedState.boostClickPowerPrice;
+            boostEnergyRegenPrice = savedState.boostEnergyRegenPrice;
+            boostMaxEnergyPrice = savedState.boostMaxEnergyPrice;
+
+            coinCountElement.textContent = coinCount;
+            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
+            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
+            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
+            updateEnergyBar();
+        }
+    }
+
+    // Generate referral code
+    function generateReferralCode() {
+        let code = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        for (let i = 0; i < 8; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return code;
+    }
+
+    // Display referral code
+    function displayReferralCode() {
+        const code = generateReferralCode();
+        referralCodeElement.value = code;
+    }
+
+    // Handle click
+    clickButton.addEventListener('click', () => {
+        if (energy > 0) {
+            coinCount += clickPower;
+            energy -= 1;
+            coinCountElement.textContent = coinCount;
+            updateEnergyBar();
+            showCoinFly('+1');
+            saveGameState(); // Save game state on click
+        }
+    });
+
+    // Update energy bar
+    function updateEnergyBar() {
+        const energyPercentage = (energy / maxEnergy) * 100;
+        energyFill.style.width = energyPercentage + '%';
+    }
+
+    // Show coin fly effect
+    function showCoinFly(text) {
+        const coinFly = document.createElement('div');
+        coinFly.className = 'coin-fly';
+        coinFly.textContent = text;
+        document.body.appendChild(coinFly);
+
+        const rect = clickButton.getBoundingClientRect();
+        coinFly.style.left = rect.left + rect.width / 2 + 'px';
+        coinFly.style.top = rect.top + rect.height / 2 + 'px';
+
+        setTimeout(() => {
+            coinFly.remove();
+        }, 1000);
+    }
+
+    // Energy regeneration
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy += energyRegen;
+            if (energy > maxEnergy) {
+                energy = maxEnergy;
+            }
+            updateEnergyBar();
+        }
+    }, 1000);
+
+    // Show and hide shop
+    shopButton.addEventListener('click', () => {
+        shop.style.display = 'block';
+    });
+
+    closeShop.addEventListener('click', () => {
+        shop.style.display = 'none';
+    });
+
+    // Show and hide referral
+    referralButton.addEventListener('click', () => {
+        referral.style.display = 'block';
+    });
+
+    closeReferral.addEventListener('click', () => {
+        referral.style.display = 'none';
+    });
+
+    // Show and hide task
+    taskButton.addEventListener('click', () => {
+        task.style.display = 'block';
+    });
+
+    closeTask.addEventListener('click', () => {
+        task.style.display = 'none';
+    });
+
+    // Handle shop purchases
+    boostClickPower.addEventListener('click', () => {
+        if (coinCount >= boostClickPowerPrice) {
+            coinCount -= boostClickPowerPrice;
+            clickPower += 1;
+            coinCountElement.textContent = coinCount;
+            boostClickPowerPrice += 50;
+            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    boostEnergyRegen.addEventListener('click', () => {
+        if (coinCount >= boostEnergyRegenPrice) {
+            coinCount -= boostEnergyRegenPrice;
+            energyRegen += 1;
+            coinCountElement.textContent = coinCount;
+            boostEnergyRegenPrice += 75;
+            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    boostMaxEnergy.addEventListener('click', () => {
+        if (coinCount >= boostMaxEnergyPrice) {
+            coinCount -= boostMaxEnergyPrice;
+            maxEnergy += 50;
+            coinCountElement.textContent = coinCount;
+            boostMaxEnergyPrice += 100;
+            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
+            updateEnergyBar();
+            saveGameState(); // Save game state on purchase
+        }
+    });
+
+    // Handle referral code submission
+    enterCodeButton.addEventListener('click', () => {
+        const enteredCode = enterReferralCodeElement.value.trim();
+        if (enteredCode !== '' && enteredCode !== referralCodeElement.value) {
+            // Add bonus coins for using a referral code
+            coinCount += 100;
+            coinCountElement.textContent = coinCount;
+            enterReferralCodeElement.value = '';
+            alert('Referral code accepted! You have earned 100 coins.');
+            saveGameState(); // Save game state on referral code submission
+        } else {
+            alert('Invalid referral code.');
+        }
+    });
+
+    // Display leagues
+    function displayLeagues() {
+        const leagues = [
+            { name: 'Bronze', price: 100 },
+            { name: 'Silver', price: 500 },
+            { name: 'Gold', price: 1000 }
+        ];
+
+        leaguesList.innerHTML = '';
+        leagues.forEach(league => {
+            const leagueItem = document.createElement('div');
+            leagueItem.className = 'league-item';
+            leagueItem.textContent = `${league.name} League (Cost: ${league.price} coins)`;
+            leaguesList.appendChild(leagueItem);
+
+            leagueItem.addEventListener('click', () => {
+                if (coinCount >= league.price) {
+                    coinCount -= league.price;
+                    coinCountElement.textContent = coinCount;
+                    alert(`You have joined the ${league.name} League!`);
+                    saveGameState(); // Save game state on joining a league
+                } else {
+                    alert(`Not enough coins to join the ${league.name} League.`);
+                }
+            });
+        });
+    }
+// Запрет масштабирования страницы на мобильных устройствах
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (event) => {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// Запрет выхода за границы интерфейса
+document.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+}, { passive: false });
+
+    // Initialize game
+    function initializeGame() {
+        loadGameState(); // Load game state on initialization
+        displayReferralCode();
+        displayLeagues();
+    }
+
+    
    // Save game state to localStorage
     function saveGameState() {
         const gameState = {
@@ -507,6 +745,7 @@
 
     // Initialize
     startEnergyRegeneration();
+    initializeGame();
 </script>
 
 </body>
