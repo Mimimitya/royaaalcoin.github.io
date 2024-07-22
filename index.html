@@ -310,6 +310,41 @@
     const referralCodeInput = document.getElementById('referralCode');
     const enterReferralCodeInput = document.getElementById('enterReferralCode');
     const enterCodeButton = document.getElementById('enterCodeButton');
+   // Save game state to localStorage
+    function saveGameState() {
+        const gameState = {
+            coinCount,
+            clickPower,
+            energy,
+            maxEnergy,
+            energyRegen,
+            boostClickPowerPrice,
+            boostEnergyRegenPrice,
+            boostMaxEnergyPrice,
+        };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    }
+
+    // Load game state from localStorage
+    function loadGameState() {
+        const savedState = JSON.parse(localStorage.getItem('gameState'));
+        if (savedState) {
+            coinCount = savedState.coinCount;
+            clickPower = savedState.clickPower;
+            energy = savedState.energy;
+            maxEnergy = savedState.maxEnergy;
+            energyRegen = savedState.energyRegen;
+            boostClickPowerPrice = savedState.boostClickPowerPrice;
+            boostEnergyRegenPrice = savedState.boostEnergyRegenPrice;
+            boostMaxEnergyPrice = savedState.boostMaxEnergyPrice;
+
+            coinCountElement.textContent = coinCount;
+            boostClickPowerPriceElement.textContent = boostClickPowerPrice;
+            boostEnergyRegenPriceElement.textContent = boostEnergyRegenPrice;
+            boostMaxEnergyPriceElement.textContent = boostMaxEnergyPrice;
+            updateEnergyBar();
+        }
+    }
 
     // Click button functionality
     clickButton.addEventListener('click', () => {
@@ -326,6 +361,21 @@
             }
             updateEnergyBar();
         }
+    }
+ // Show coin fly effect
+    function showCoinFly(text) {
+        const coinFly = document.createElement('div');
+        coinFly.className = 'coin-fly';
+        coinFly.textContent = text;
+        document.body.appendChild(coinFly);
+
+        const rect = clickButton.getBoundingClientRect();
+        coinFly.style.left = rect.left + rect.width / 2 + 'px';
+        coinFly.style.top = rect.top + rect.height / 2 + 'px';
+
+        setTimeout(() => {
+            coinFly.remove();
+        }, 1000);
     }
 
     function updateEnergyBar() {
